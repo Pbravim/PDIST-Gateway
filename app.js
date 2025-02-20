@@ -1,6 +1,6 @@
 import express from 'express';
 import axios from 'axios';
-
+import cors from 'cors';
 
 class App {
     constructor() {
@@ -10,6 +10,7 @@ class App {
     }
 
     middlewares() {
+        this.app.use(cors())
         this.app.use(express.json()); 
         this.app.use(express.urlencoded({ extended: true })); 
     }
@@ -41,6 +42,10 @@ class App {
     }
 
     routes() {
+        this.app.use((req, res, next) => {
+            console.log(req.headers, req.cookies);
+            next()
+        })
         this.app.use('/api1', (req, res) => this.proxyRequest(req, res, 'http://localhost:3054'));
         this.app.use('/api2', (req, res) => this.proxyRequest(req, res, 'http://localhost:3053'));
     }
