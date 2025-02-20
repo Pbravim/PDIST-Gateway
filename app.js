@@ -34,7 +34,7 @@ class App {
             res.status(response.status).json(response.data);
         } catch (error) {
             console.error('Proxy error:', error.message);
-            res.status(error.response?.status || 500).json({
+            res.status(error.status || 500).json({
                 message: 'Proxy error',
                 details: error.message
             });
