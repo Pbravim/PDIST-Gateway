@@ -1,6 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
+import sendReservationRequest from './messageria/messageriaProducer.js'
 
 class App {
     constructor() {
@@ -41,11 +42,39 @@ class App {
         }
     }
 
+    async rentCar (req, res) {
+        try {
+            const { carId } = req.body;
+
+            const reservationData = {
+                carId,
+                token: req.headers.authorization.split(" ")[1]
+            }
+            
+            sendReservationRequest(reservationData)
+            .then(() => {
+                res.status(200).json({ message: "Reserva enviada com sucesso!" });
+            })
+            .catch((error) => {
+                console.error("Erro ao enviar reserva:", error);
+                res.status(500).json({ message: "Erro ao enviar reserva" });
+            });
+        } catch (error) {
+            console.error("Erro ao enviar reserva:", error);
+            res.status(500).json({ message: "Erro ao enviar reserva" });
+        }
+    }
+
     routes() {
         this.app.use((req, res, next) => {
-            console.log(req.headers, req.cookies);
+            console.log(req.path, req.method);
             next()
         })
+
+        this.app.use("/rent-car", (req, res) => {
+            this.rentCar(req, res)
+        }) 
+
         this.app.use('/api1', (req, res) => this.proxyRequest(req, res, 'http://localhost:3054'));
         this.app.use('/api2', (req, res) => this.proxyRequest(req, res, 'http://localhost:3053'));
     }
