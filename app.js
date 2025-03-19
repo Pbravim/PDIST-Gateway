@@ -61,20 +61,18 @@ class App {
     async rentCar (req, res) {
         try {
             const { carId } = req.params;
+            const { data_inicio, data_fim } = req.body
 
             const reservationData = {
                 carId,
+                data_inicio,
+                data_fim,
                 token: req.headers.authorization.split(" ")[1]
             }
             
-            sendReservationRequest(reservationData)
-            .then(() => {
-                res.status(200).json({ message: "Reserva enviada com sucesso!" });
-            })
-            .catch((error) => {
-                console.error("Erro ao enviar reserva:", error);
-                res.status(500).json({ message: "Erro ao enviar reserva" });
-            });
+            await sendReservationRequest(reservationData)
+            
+            res.status(200).json({ message: "Reserva enviada com sucesso!" });
         } catch (error) {
             console.log(error)
             res.status(500).json({ message: "Erro ao enviar reserva" });
