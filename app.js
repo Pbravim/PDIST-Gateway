@@ -19,32 +19,48 @@ class App {
     async proxyRequest(req, res, targetBaseUrl) {
         try {
             const targetUrl = `${targetBaseUrl}${req.url}`;
-            console.log(`Proxying request to ${targetUrl}`);
 
+            console.log(`Proxying request to: ${targetUrl}`);        
+            console.log('Request Method:', req.method);
+            console.log('Request Headers:', JSON.stringify(req.headers, null, 2));
+            console.log('Request Body:', req.body ? JSON.stringify(req.body, null, 2) : 'No body');
+    
             const axiosConfig = {
                 method: req.method,
                 url: targetUrl,
                 headers: req.headers,
-                data: JSON.stringify(req.body) 
+                data: JSON.stringify(req.body)
             };
-
+    
             delete axiosConfig.headers["content-length"];
+            
             const response = await axios(axiosConfig);
-            
-            
+    
+            console.log('Response Status:', response.status);
+            console.log('Response Headers:', JSON.stringify(response.headers, null, 2));
+            console.log('Response Body:', JSON.stringify(response.data, null, 2));
+    
             res.status(response.status).json(response.data);
-        } catch (error) {
-            console.error('Proxy error:', error.message);
-            res.status(error.status || 500).json({
+        } catch (error) {   
+            if (error.isAxiosError) {
+                console.error('Axios error details:', {
+                    message: error.message,
+                    status: error.response?.status,
+                    headers: error.response?.headers,
+                    data: error.response?.data
+                });
+            }
+    
+            res.status(error.response?.status || 500).json({
                 message: 'Proxy error',
-                details: error.message
+                details: error ? error.response?.data : error.message
             });
         }
     }
 
     async rentCar (req, res) {
         try {
-            const { carId } = req.body;
+            const { carId } = req.params;
 
             const reservationData = {
                 carId,
@@ -60,7 +76,7 @@ class App {
                 res.status(500).json({ message: "Erro ao enviar reserva" });
             });
         } catch (error) {
-            console.error("Erro ao enviar reserva:", error);
+            console.log(error)
             res.status(500).json({ message: "Erro ao enviar reserva" });
         }
     }
@@ -71,7 +87,7 @@ class App {
             next()
         })
 
-        this.app.use("/rent-car", (req, res) => {
+        this.app.use("/rent-car/:carId", (req, res) => {
             this.rentCar(req, res)
         }) 
 
